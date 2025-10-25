@@ -1,15 +1,19 @@
-const express = require('express');
-const router = express.Router();
+// File: backend/models/User.js
 
-// Import các hàm controller
-const { getAllUsers, createUser } = require('../controllers/userController.js');
+const mongoose = require('mongoose');
 
-// Định nghĩa các routes
-// Khi có request GET tới / , nó sẽ gọi hàm getAllUsers
-router.get('/', getAllUsers);
+// Đây là "khuôn" cho dữ liệu
+const UserSchema = new mongoose.Schema({
+    name: {
+        type: String,
+        required: true // Bắt buộc phải có tên
+    },
+    email: {
+        type: String,
+        required: true, // Bắt buộc phải có email
+        unique: true    // Email phải là duy nhất
+    }
+});
 
-// Khi có request POST tới / , nó sẽ gọi hàm createUser
-router.post('/', createUser);
-
-// Export router
-module.exports = router;
+// Export model, đặt tên là 'User' (MongoDB sẽ tự đổi thành 'users' trong CSDL)
+module.exports = mongoose.model('User', UserSchema);

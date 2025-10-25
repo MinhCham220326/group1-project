@@ -1,34 +1,51 @@
-// Bước 2: Tạo một mảng tạm thời để giả lập CSDL
-// Thêm sẵn 2 user để GET API có dữ liệu trả về
-let users = [
-    { id: 1, name: "Phan Minh Chấm", email: "student1@test.com" },
-    { id: 2, name: "Huỳnh Chí Cường", email: "student2@test.com" }
-];
+// File: backend/controllers/userController.js
 
-// Bước 3: Viết API GET /users
+
+const User = require('../models/User.js'); // <--- THÊM DÒNG NÀY
+
+// --- XÓA DÒNG NÀY ---
+// let users = [ ... ]; (Xóa toàn bộ mảng này)
+
+// --- THAY ĐỔI LỚN 1: Dùng async/await ---
 // Hàm này lấy tất cả người dùng
-const getAllUsers = (req, res) => {
-    res.status(200).json(users);
+const getAllUsers = async (req, res) => { // <-- Thêm async
+    try {
+        // Thay vì trả về mảng, chúng ta tìm trong CSDL
+        const users = await User.find(); // Tương đương "SELECT * FROM users"
+        res.status(200).json(users);
+
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
 };
 
-// Bước 3: Viết API POST /users
+// --- THAY ĐỔI LỚN 2: Dùng async/await và Model ---
 // Hàm này tạo một người dùng mới
-const createUser = (req, res) => {
+const createUser = async (req, res) => { // <-- Thêm async
     // Lấy thông tin user mới từ request body
-    const newUser = req.body;
+    const { name, email } = req.body;
     
-    // Thêm một id đơn giản (lớn hơn id cuối cùng)
-    const newId = users.length > 0 ? users[users.length - 1].id + 1 : 1;
-    newUser.id = newId;
+    // Tạo một đối tượng User mới dựa trên Model
+    const newUser = new User({
+        name,
+        email
+    });
 
-    // Thêm user mới vào mảng
-    users.push(newUser);
+    try {
+        // Lưu user mới vào CSDL
+        await newUser.save(); 
+        
+        // Giống Hoạt động 3: Lấy lại toàn bộ danh sách và trả về
+        const allUsers = await User.find();
+        res.status(201).json(allUsers); // 201 = Created
 
-    // Trả về thông báo thành công và toàn bộ danh sách users đã cập nhật
-    res.status(201).json(users);
+    } catch (error) {
+        // (Nếu email bị trùng, nó cũng sẽ báo lỗi ở đây)
+        res.status(400).json({ message: error.message }); // 400 = Bad Request
+    }
 };
 
-// Đừng quên export các hàm này để routes có thể dùng
+// Đừng quên export các hàm này
 module.exports = {
     getAllUsers,
     createUser
