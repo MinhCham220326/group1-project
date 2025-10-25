@@ -1,14 +1,30 @@
+// File: backend/server.js
+
 const express = require('express');
-const cors = require('cors'); // <--- 1. THÊM DÒNG NÀY (Ở trên cùng)
+const cors = require('cors');
+const mongoose = require('mongoose'); // <--- THÊM DÒNG NÀY
+require('dotenv').config(); // <--- THÊM DÒNG NÀY (Để đọc file .env)
 
 const app = express();
-
-app.use(cors()); // <--- 2. THÊM DÒNG NÀY (Ngay bên dưới app())
+app.use(cors());
 app.use(express.json());
+
+// --- KẾT NỐI MONGODB ---
+// Lấy chuỗi kết nối từ file .env
+const uri = process.env.MONGO_URI; 
+mongoose.connect(uri); // Bắt đầu kết nối
+
+const connection = mongoose.connection;
+connection.once('open', () => {
+  console.log("MongoDB database connection established successfully!");
+});
+// --- KẾT THÚC KẾT NỐI ---
+
 
 // Import user routes
 const userRoutes = require('./routes/user');
 app.use('/users', userRoutes);
 
-const PORT = process.env.PORT || 3000;
+// PORT này giờ sẽ lấy từ file .env
+const PORT = process.env.PORT || 3000; 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
