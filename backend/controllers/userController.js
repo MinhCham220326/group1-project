@@ -1,8 +1,8 @@
 // Bước 2: Tạo một mảng tạm thời để giả lập CSDL
 // Thêm sẵn 2 user để GET API có dữ liệu trả về
 let users = [
-    { id: 1, name: "Student 1", email: "student1@test.com" },
-    { id: 2, name: "Student 2", email: "student2@test.com" }
+    { id: 1, name: "Phan Minh Chấm", email: "student1@test.com" },
+    { id: 2, name: "Huỳnh Chí Cường", email: "student2@test.com" }
 ];
 
 // Bước 3: Viết API GET /users
