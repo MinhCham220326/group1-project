@@ -1,5 +1,3 @@
-// File: backend/models/User.js
-
 const mongoose = require('mongoose');
 
 // Đây là "khuôn" cho dữ liệu
@@ -15,5 +13,5 @@ const UserSchema = new mongoose.Schema({
     }
 });
 
-// Export model, đặt tên là 'User' (MongoDB sẽ tự đổi thành 'users' trong CSDL)
+// Export model
 module.exports = mongoose.model('User', UserSchema);
