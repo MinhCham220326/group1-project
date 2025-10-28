@@ -30,6 +30,7 @@ function App() {
   // Hàm để xử lý việc thêm user mới,
   // Hàm này sẽ được truyền xuống component AddUser
   const handleUserAdded = (newUser) => {
+    console.log("--- TEST FRONTEND: DA GOI HAM handleUserAdded ---");
     // Gọi API POST để tạo user mới
     axios.post(API_URL, newUser)
       .then(response => {
