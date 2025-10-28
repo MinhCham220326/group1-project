@@ -1,52 +1,65 @@
 // File: backend/controllers/userController.js
+const User = require('../models/User.js');
 
+// (Hàm getAllUsers và createUser của bạn đã có ở đây...)
 
-const User = require('../models/User.js'); // <--- THÊM DÒNG NÀY
+// --- BẮT ĐẦU THÊM MỚI ---
 
-// --- XÓA DÒNG NÀY ---
-// let users = [ ... ]; (Xóa toàn bộ mảng này)
-
-// --- THAY ĐỔI LỚN 1: Dùng async/await ---
-// Hàm này lấy tất cả người dùng
-const getAllUsers = async (req, res) => { // <-- Thêm async
+// PUT: Sửa user
+const updateUser = async (req, res) => {
     try {
-        // Thay vì trả về mảng, chúng ta tìm trong CSDL
-        const users = await User.find(); // Tương đương "SELECT * FROM users"
-        res.status(200).json(users);
+        const { id } = req.params; // Lấy id từ URL
+        const { name, email } = req.body; // Lấy thông tin mới từ body
+
+        // Tìm và cập nhật user
+        // { new: true } để nó trả về user sau khi đã cập nhật
+        const updatedUser = await User.findByIdAndUpdate(
+            id, 
+            { name, email }, 
+            { new: true }
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Sau khi sửa, trả về DANH SÁCH user mới nhất (giống như POST)
+        // Điều này đảm bảo React cập nhật chính xác
+        const allUsers = await User.find();
+        res.status(200).json(allUsers);
+
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+// DELETE: Xóa user
+const deleteUser = async (req, res) => {
+    try {
+        const { id } = req.params; // Lấy id từ URL
+
+        const deletedUser = await User.findByIdAndDelete(id);
+
+        if (!deletedUser) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        
+        // Sau khi xóa, trả về DANH SÁCH user mới nhất
+        const allUsers = await User.find();
+        res.status(201).json(allUsers);
 
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
-// --- THAY ĐỔI LỚN 2: Dùng async/await và Model ---
-// Hàm này tạo một người dùng mới
-const createUser = async (req, res) => { // <-- Thêm async
-    // Lấy thông tin user mới từ request body
-    const { name, email } = req.body;
-    
-    // Tạo một đối tượng User mới dựa trên Model
-    const newUser = new User({
-        name,
-        email
-    });
+// --- KẾT THÚC THÊM MỚI ---
 
-    try {
-        // Lưu user mới vào CSDL
-        await newUser.save(); 
-        
-        // Giống Hoạt động 3: Lấy lại toàn bộ danh sách và trả về
-        const allUsers = await User.find();
-        res.status(201).json(allUsers); // 201 = Created
 
-    } catch (error) {
-        // (Nếu email bị trùng, nó cũng sẽ báo lỗi ở đây)
-        res.status(400).json({ message: error.message }); // 400 = Bad Request
-    }
-};
-
-// Đừng quên export các hàm này
+// Cập nhật module.exports
 module.exports = {
     getAllUsers,
-    createUser
+    createUser,
+    updateUser,   // <--- Thêm dòng này
+    deleteUser    // <--- Thêm dòng này
 };
