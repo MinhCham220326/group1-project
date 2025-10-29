@@ -3,6 +3,24 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 require('dotenv').config(); // <-- THÊM DÒNG NÀY (để đọc JWT_SECRET)
 
+// File: backend/server.js
+// ... (sau dòng app.use(express.json());)
+
+// --- KẾT NỐI MONGODB ---
+const connectDB = async () => {
+    try {
+        const conn = await mongoose.connect(process.env.MONGO_URI);
+        console.log(`MongoDB Connected: ${conn.connection.host}`);
+    } catch (error) {
+        console.error(`Error connecting to MongoDB: ${error.message}`);
+        process.exit(1); // Thoát nếu kết nối lỗi
+    }
+};
+connectDB();
+
+// --- CÁC ROUTES ---
+// ...
+
 const app = express();
 app.use(cors());
 app.use(express.json());

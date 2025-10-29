@@ -1,4 +1,4 @@
-// File: backend/models/User.js
+// File: backend/models/User.js (ĐÃ CHỈNH SỬA)
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs'); // Import bcrypt
 
@@ -43,4 +43,8 @@ UserSchema.pre('save', async function (next) {
     }
 });
 
-module.exports = mongoose.model('User', UserSchema);
+// 🛠️ DÒNG CHỈNH SỬA ĐỂ KHẮC PHỤC LỖI OVERWRITEMODELERROR
+// Kiểm tra xem mô hình 'User' đã tồn tại trong mongoose.models chưa.
+// Nếu tồn tại (do nodemon đã load), thì dùng mô hình đó.
+// Nếu chưa, thì tạo mô hình mới.
+module.exports = mongoose.models.User || mongoose.model('User', UserSchema);
