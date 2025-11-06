@@ -1,49 +1,34 @@
+// File: backend/routes/user.js
+// BAO GỒM CẢ BUỔI 4 (CRUD) VÀ BUỔI 5 (PROFILE)
 
-// File: backend/models/User.js
+const express = require('express');
+const router = express.Router();
 
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs'); // Import bcrypt
+// Import Middleware (cho Buổi 5)
+const { authMiddleware } = require('../middleware/authMiddleware'); 
 
-const UserSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: true
-    },
-    email: {
-        type: String,
-        required: true,
-        unique: true // Đảm bảo email không trùng
-    },
-    password: {
-        type: String,
-        required: true // Mật khẩu là bắt buộc
-    },
-    role: {
-        type: String,
-        enum: ['user', 'admin'], // Chỉ cho phép 2 giá trị
-        default: 'user' // Mặc định là 'user'
-    }
-    // Bạn có thể thêm các trường khác như avatar, v.v.
-});
+// Import controller
+const userController = require('../controllers/userController');
 
-// --- Mã hóa mật khẩu TRƯỚC KHI LƯU ---
-// Đây là một "pre-save hook" của Mongoose
-UserSchema.pre('save', async function (next) {
-    // Chỉ mã hóa nếu mật khẩu được tạo mới hoặc thay đổi
-    if (!this.isModified('password')) {
-        return next();
-    }
-
-    try {
-        // Tạo "salt"
-        const salt = await bcrypt.genSalt(10);
-        // Băm (hash) mật khẩu với salt
-        this.password = await bcrypt.hash(this.password, salt);
-        next();
-    } catch (error) {
-        next(error);
-    }
-});
+// --- CÁC ROUTE CŨ (BUỔI 4 - DÀNH CHO ADMIN) ---
+// (Giữ lại các route cũ: / (GET), / (POST), /:id (PUT), /:id (DELETE))
+// Lưu ý: Các route này KHÔNG được bảo vệ, 
+// (chúng ta sẽ sửa ở Hoạt động 3: Phân quyền)
+router.get('/', userController.getAllUsers);
+router.post('/', userController.createUser);
+router.put('/:id', userController.updateUser);
+router.delete('/:id', userController.deleteUser);
 
 
-module.exports = mongoose.model('User', UserSchema);
+// --- BẮT ĐẦU THÊM MỚI (BUỔI 5 - HOẠT ĐỘNG 2) ---
+
+// GET /api/users/profile (Xem thông tin cá nhân)
+// Dùng authMiddleware để bảo vệ
+router.get('/profile', authMiddleware, userController.getProfile);
+
+// PUT /api/users/profile (Cập nhật thông tin cá nhân)
+router.put('/profile', authMiddleware, userController.updateProfile);
+
+// --- KẾT THÚC THÊM MỚI ---
+
+module.exports = router;
