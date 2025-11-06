@@ -28,12 +28,14 @@ app.use(express.json());
 // ... (kết nối MongoDB giữ nguyên) ...
 
 // --- CÁC ROUTES ---
-const userRoutes = require('./routes/user'); // (của Hoạt động 7)
-app.use('/users', userRoutes); 
+
 
 // THÊM ROUTE MỚI CHO AUTH
 const authRoutes = require('./routes/auth');
 app.use('/api/auth', authRoutes); // <-- Đặt tiền tố là /api/auth
+
+const userRoutes = require('./routes/user');
+app.use('/api/users', userRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

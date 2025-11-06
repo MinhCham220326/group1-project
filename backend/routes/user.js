@@ -1,49 +1,38 @@
+// File: backend/routes/user.js
+const express = require('express');
+const router = express.Router();
 
-// File: backend/models/User.js
-
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs'); // Import bcrypt
-
-const UserSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: true
-    },
-    email: {
-        type: String,
-        required: true,
-        unique: true // Đảm bảo email không trùng
-    },
-    password: {
-        type: String,
-        required: true // Mật khẩu là bắt buộc
-    },
-    role: {
-        type: String,
-        enum: ['user', 'admin'], // Chỉ cho phép 2 giá trị
-        default: 'user' // Mặc định là 'user'
-    }
-    // Bạn có thể thêm các trường khác như avatar, v.v.
-});
-
-// --- Mã hóa mật khẩu TRƯỚC KHI LƯU ---
-// Đây là một "pre-save hook" của Mongoose
-UserSchema.pre('save', async function (next) {
-    // Chỉ mã hóa nếu mật khẩu được tạo mới hoặc thay đổi
-    if (!this.isModified('password')) {
-        return next();
-    }
-
-    try {
-        // Tạo "salt"
-        const salt = await bcrypt.genSalt(10);
-        // Băm (hash) mật khẩu với salt
-        this.password = await bcrypt.hash(this.password, salt);
-        next();
-    } catch (error) {
-        next(error);
-    }
-});
+// Import Middleware
+const { authMiddleware } = require('../middleware/authMiddleware'); 
+// Import controller
+const userController = require('../controllers/userController');
 
 
-module.exports = mongoose.model('User', UserSchema);
+// --- CÁC ROUTE CỤ THỂ (Specific) PHẢI ĐẶT TRƯỚC ---
+// (Hoạt động 5.2 - Profile)
+
+// GET /api/users/profile (Xem thông tin cá nhân)
+router.get('/profile', authMiddleware, userController.getProfile);
+
+// PUT /api/users/profile (Cập nhật thông tin cá nhân)
+router.put('/profile', authMiddleware, userController.updateProfile);
+
+
+// --- CÁC ROUTE CHUNG (Generic) PHẢI ĐẶT SAU ---
+
+// (Hoạt động 4/7 - Admin CRUD)
+// GET /api/users/
+router.get('/', userController.getAllUsers); 
+
+// POST /api/users/
+// (Lưu ý: API này đã cũ, nên dùng /api/auth/signup)
+router.post('/', userController.createUser); 
+
+// PUT /api/users/:id (Admin sửa)
+router.put('/:id', userController.updateUser);
+
+// DELETE /api/users/:id (Admin xóa)
+router.delete('/:id', userController.deleteUser);
+
+
+module.exports = router;
