@@ -15,7 +15,12 @@ router.put('/profile', authMiddleware, userController.updateProfile);
 
 // --- 2. THÊM ROUTE UPLOAD AVATAR ---
 // POST /api/users/profile/avatar
-router.post('/profile/avatar', [authMiddleware, uploadMiddleware.single('avatar')], userController.uploadAvatar);
+router.post(
+  '/profile/avatar',
+  [authMiddleware, uploadMiddleware.single('avatar')],
+  userController.uploadAvatar
+);
+
 
 
 // --- CÁC ROUTE ADMIN ---
