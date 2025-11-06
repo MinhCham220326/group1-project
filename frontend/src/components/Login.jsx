@@ -6,9 +6,6 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const [message, setMessage] = useState('');
     const [isError, setIsError] = useState(false);
-    
-    // --- 1. THÊM DÒNG NÀY ---
-    // Tạo state để lưu token và hiển thị
     const [token, setToken] = useState('');
 
     const handleSubmit = async (e) => {
@@ -17,15 +14,23 @@ const Login = () => {
             const res = await axios.post('http://localhost:3000/api/auth/login', { email, password });
             setMessage(res.data.message); // "Đăng nhập thành công"
             setIsError(false);
+
+            // --- CẬP NHẬT Ở ĐÂY (THEO YÊU CẦU) ---
             localStorage.setItem('token', res.data.token);
-            
-            // --- 2. THÊM DÒNG NÀY ---
-            // Lưu token vào state để hiển thị
-            setToken(res.data.token); 
+            // Lưu cả user (chứa role) vào localStorage
+            localStorage.setItem('user', JSON.stringify(res.data.user)); 
+            // --- HẾT CẬP NHẬT ---
+
+            setToken(res.data.token); // Lưu token vào state để hiển thị
 
         } catch (error) {
             setIsError(true); 
             setToken(''); // Nếu đăng nhập lỗi, xóa token cũ
+
+            // --- CẬP NHẬT Ở ĐÂY (THEO YÊU CẦU) ---
+            localStorage.removeItem('token'); // Xóa token cũ nếu lỗi
+            localStorage.removeItem('user');  // Xóa user cũ nếu lỗi
+            // --- HẾT CẬP NHẬT ---
             
             if (error.response) {
                 setMessage(error.response.data.message);
@@ -65,8 +70,7 @@ const Login = () => {
             {/* Hiển thị thông báo (lỗi hoặc thành công) */}
             {message && <p className={isError ? 'message message-error' : 'message'}>{message}</p>}
 
-            {/* --- 3. THÊM KHỐI NÀY ĐỂ HIỂN THỊ TOKEN --- */}
-            {/* Nếu state 'token' có giá trị, hiển thị nó ra */}
+            {/* Hiển thị Token */}
             {token && (
                 <div style={{ marginTop: '1rem', textAlign: 'left' }}>
                     <p className="message">JWT Token:</p>
@@ -75,7 +79,6 @@ const Login = () => {
                     </p>
                 </div>
             )}
-            {/* --- HẾT PHẦN THÊM --- */}
         </div>
     );
 };

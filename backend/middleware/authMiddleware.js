@@ -1,32 +1,41 @@
 // File: backend/middleware/authMiddleware.js
 const jwt = require('jsonwebtoken');
-const User = require('../models/User.js'); // Đảm bảo đường dẫn đúng
+const User = require('../models/User.js'); 
 
+// HÀM CŨ (Hoạt động 2) - Dùng để kiểm tra đăng nhập
 const authMiddleware = async (req, res, next) => {
     let token;
-    // Token sẽ được gửi trong header: 'Authorization: Bearer <token>'
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
         try {
-            // 1. Lấy token
             token = req.headers.authorization.split(' ')[1];
-
-            // 2. Xác thực token
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-            // 3. Lấy thông tin user (trừ mật khẩu) và gắn vào req
-            // req.user sẽ được dùng ở TẤT CẢ các hàm API được bảo vệ
             req.user = await User.findById(decoded.id).select('-password');
-
-            next(); // Chạy hàm API tiếp theo
+            next();
         } catch (error) {
-            console.error(error);
-            res.status(401).json({ message: 'Token không hợp lệ, không có quyền truy cập' });
+            res.status(401).json({ message: 'Token không hợp lệ' });
         }
     }
-
     if (!token) {
-        res.status(401).json({ message: 'Không tìm thấy token, không có quyền truy cập' });
+        res.status(401).json({ message: 'Không tìm thấy token' });
     }
 };
 
-module.exports = { authMiddleware };
+// --- BẮT ĐẦU THÊM MỚI (HOẠT ĐỘNG 3) ---
+
+// HÀM MỚI - Dùng để kiểm tra Admin
+// Hàm này sẽ chạy SAU KHI authMiddleware chạy
+const adminMiddleware = (req, res, next) => {
+    // req.user đã được gán bởi authMiddleware
+    if (req.user && req.user.role === 'admin') {
+        next(); // Là Admin, cho phép đi tiếp
+    } else {
+        // Không phải Admin
+        res.status(403).json({ message: "Không có quyền Admin" }); // 403 = Forbidden (Cấm)
+    }
+};
+// --- KẾT THÚC THÊM MỚI ---
+
+module.exports = { 
+    authMiddleware, 
+    adminMiddleware // <-- Export hàm mới
+};
