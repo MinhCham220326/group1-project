@@ -1,4 +1,3 @@
-// File: frontend/src/components/Login.jsx
 import React, { useState } from 'react';
 import axios from 'axios';
 
@@ -7,6 +6,10 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const [message, setMessage] = useState('');
     const [isError, setIsError] = useState(false);
+    
+    // --- 1. THÊM DÒNG NÀY ---
+    // Tạo state để lưu token và hiển thị
+    const [token, setToken] = useState('');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -15,23 +18,25 @@ const Login = () => {
             setMessage(res.data.message); // "Đăng nhập thành công"
             setIsError(false);
             localStorage.setItem('token', res.data.token);
-            // (Sau này bạn sẽ dùng 'useNavigate' để chuyển trang)
+            
+            // --- 2. THÊM DÒNG NÀY ---
+            // Lưu token vào state để hiển thị
+            setToken(res.data.token); 
+
         } catch (error) {
-        setIsError(true); // Đặt trạng thái lỗi
-        
-        // KIỂM TRA LỖI:
-        if (error.response) {
-            // Có phản hồi từ server (ví dụ: Email trùng, sai pass)
-            setMessage(error.response.data.message);
-        } else {
-            // Không có phản hồi (ví dụ: Server sập, lỗi mạng)
-            setMessage("Lỗi kết nối: Không thể kết nối đến server.");
-        }
+            setIsError(true); 
+            setToken(''); // Nếu đăng nhập lỗi, xóa token cũ
+            
+            if (error.response) {
+                setMessage(error.response.data.message);
+            } else {
+                setMessage("Lỗi kết nối: Không thể kết nối đến server.");
             }
-        };
+        }
+    };
 
     return (
-        <div className="form-container"> {/* Thêm class bọc ngoài */}
+        <div className="form-container"> 
             <h2>Login</h2>
             <form onSubmit={handleSubmit}>
                 <div className="form-group">
@@ -56,8 +61,21 @@ const Login = () => {
                 </div>
                 <button type="submit" className="btn">Login</button>
             </form>
-            {/* Hiển thị thông báo với style */}
+            
+            {/* Hiển thị thông báo (lỗi hoặc thành công) */}
             {message && <p className={isError ? 'message message-error' : 'message'}>{message}</p>}
+
+            {/* --- 3. THÊM KHỐI NÀY ĐỂ HIỂN THỊ TOKEN --- */}
+            {/* Nếu state 'token' có giá trị, hiển thị nó ra */}
+            {token && (
+                <div style={{ marginTop: '1rem', textAlign: 'left' }}>
+                    <p className="message">JWT Token:</p>
+                    <p style={{ wordBreak: 'break-all', fontSize: '0.8rem', backgroundColor: '#282c34', padding: '10px', borderRadius: '5px' }}>
+                        {token}
+                    </p>
+                </div>
+            )}
+            {/* --- HẾT PHẦN THÊM --- */}
         </div>
     );
 };
