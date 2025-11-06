@@ -4,28 +4,29 @@ const router = express.Router();
 
 // Import cả 2 middleware
 const { authMiddleware, adminMiddleware } = require('../middleware/authMiddleware'); 
-
 const userController = require('../controllers/userController');
 
+// --- 1. IMPORT UPLOAD MIDDLEWARE ---
+const uploadMiddleware = require('../middleware/uploadMiddleware'); 
+
 // --- CÁC ROUTE CỤ THỂ (Profile) ---
-// (Từ Hoạt động 2 - Chỉ cần đăng nhập)
 router.get('/profile', authMiddleware, userController.getProfile);
 router.put('/profile', authMiddleware, userController.updateProfile);
 
-// --- BẮT ĐẦU CẬP NHẬT (HOẠT ĐỘNG 3) ---
+// --- 2. THÊM ROUTE UPLOAD AVATAR ---
+// POST /api/users/profile/avatar
+router.post('/profile/avatar', [authMiddleware, uploadMiddleware.single('avatar')], userController.uploadAvatar);
 
-// (API cũ từ Buổi 4 - Giờ chỉ dành cho Admin)
-// Cả 2 route này yêu cầu: 1. Đăng nhập (auth) VÀ 2. Là Admin (admin)
 
+// --- CÁC ROUTE ADMIN ---
 // GET /api/users (Admin xem danh sách)
 router.get('/', [authMiddleware, adminMiddleware], userController.getAllUsers);
 
 // DELETE /api/users/:id (Admin xóa)
 router.delete('/:id', [authMiddleware, adminMiddleware], userController.deleteUser);
 
-// --- KẾT THÚC CẬP NHẬT ---
-
-// (Route POST /api/users/ đã cũ, chúng ta dùng /api/auth/signup)
-// router.post('/', userController.createUser); // (Bạn có thể xóa dòng này)
+// (Bạn có thể giữ lại 2 route này nếu vẫn cần, nếu không thì xóa đi)
+router.post('/', userController.createUser);
+router.put('/:id', userController.updateUser);
 
 module.exports = router;
