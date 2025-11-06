@@ -1,10 +1,9 @@
 // File: backend/controllers/userController.js
 const User = require('../models/User.js');
-const bcrypt = require('bcryptjs'); 
+const bcrypt = require('bcryptjs');
 
-// (Hàm getAllUsers và createUser của bạn đã có ở đây...)
+// --- LẤY DANH SÁCH USER (Admin) ---
 const getAllUsers = async (req, res) => {
-    // (Code gốc của bạn giữ nguyên)
     try {
         const users = await User.find();
         res.status(200).json(users);
@@ -12,21 +11,20 @@ const getAllUsers = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+// --- TẠO USER MỚI (đã cũ) ---
 const createUser = async (req, res) => {
-    // (Code gốc của bạn giữ nguyên)
     res.status(400).json({ message: "API này đã cũ, hãy dùng /api/auth/signup" });
 };
 
-// (Code gốc của bạn giữ nguyên)
-// PUT: Sửa user (Admin)
+// --- SỬA USER (Admin) ---
 const updateUser = async (req, res) => {
-    // (Code gốc của bạn giữ nguyên)
     try {
-        const { id } = req.params; 
-        const { name, email } = req.body; 
+        const { id } = req.params;
+        const { name, email } = req.body;
         const updatedUser = await User.findByIdAndUpdate(
-            id, 
-            { name, email }, 
+            id,
+            { name, email },
             { new: true }
         );
         if (!updatedUser) {
@@ -39,10 +37,8 @@ const updateUser = async (req, res) => {
     }
 };
 
-// (Code gốc của bạn giữ nguyên)
-// DELETE: Xóa user (Admin)
+// --- XÓA USER (Admin) ---
 const deleteUser = async (req, res) => {
-    // (Code gốc của bạn giữ nguyên)
     try {
         const { id } = req.params;
         const deletedUser = await User.findByIdAndDelete(id);
@@ -50,16 +46,14 @@ const deleteUser = async (req, res) => {
             return res.status(404).json({ message: "User not found" });
         }
         const allUsers = await User.find();
-        res.status(200).json(allUsers); 
+        res.status(200).json(allUsers);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
-// (Code gốc của bạn giữ nguyên)
-// CHỨC NĂNG 5: XEM THÔNG TIN CÁ NHÂN (View Profile)
+// --- XEM THÔNG TIN CÁ NHÂN ---
 const getProfile = async (req, res) => {
-    // (Code gốc của bạn giữ nguyên)
     if (req.user) {
         res.status(200).json(req.user);
     } else {
@@ -67,65 +61,75 @@ const getProfile = async (req, res) => {
     }
 };
 
-// (Code gốc của bạn giữ nguyên)
-// CHỨC NĂNG 4: CẬP NHẬT THÔNG TIN CÁ NHÂN (Update Profile)
+// --- CẬP NHẬT THÔNG TIN CÁ NHÂN ---
 const updateProfile = async (req, res) => {
-    // (Code gốc của bạn giữ nguyên)
     try {
-        const userId = req.user._id; 
+        const userId = req.user._id;
         const { name, email, password } = req.body;
-        const updatedFields = {
-            name: name,
-            email: email,
-        };
+        const updatedFields = { name, email };
+
         if (password) {
             const salt = await bcrypt.genSalt(10);
             updatedFields.password = await bcrypt.hash(password, salt);
         }
+
         const updatedUser = await User.findByIdAndUpdate(
             userId,
             updatedFields,
-            { new: true } 
+            { new: true }
         ).select('-password');
+
         res.status(200).json(updatedUser);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
-// --- BẮT ĐẦU THÊM MỚI (CHỨC NĂNG 10) ---
-exports.uploadAvatar = async (req, res) => {
+// --- UPLOAD ẢNH ĐẠI DIỆN (CLOUDINARY) ---
+// --- UPLOAD ẢNH ĐẠI DIỆN ---
+const uploadAvatar = async (req, res) => {
     try {
-        // req.file.path là URL của ảnh (do uploadMiddleware cung cấp)
+        console.log("🟢 Nhận request upload avatar...");
+        console.log("📁 req.file:", req.file);
+        console.log("👤 req.user:", req.user);
+
         if (!req.file) {
-            return res.status(400).json({ message: 'Vui lòng chọn 1 file ảnh' });
+            return res.status(400).json({ message: 'Không có file nào được tải lên!' });
+        }
+
+        if (!req.user) {
+            return res.status(401).json({ message: 'Không xác định được người dùng (token sai?)' });
         }
 
         const user = await User.findById(req.user._id);
-        
-        // (Xóa ảnh cũ trên Cloudinary nếu cần - Tùy chọn)
+        if (!user) {
+            return res.status(404).json({ message: 'Không tìm thấy người dùng!' });
+        }
 
-        // Cập nhật link avatar mới vào CSDL
+        // ✅ CloudinaryStorage tự gắn `req.file.path` là URL ảnh
         user.avatar = req.file.path;
         await user.save();
 
+        console.log("✅ Upload thành công:", user.avatar);
         res.status(200).json({
-            message: "Upload avatar thành công",
+            message: 'Upload avatar thành công!',
             avatarUrl: user.avatar
         });
+
     } catch (error) {
+        console.error("❌ Lỗi uploadAvatar:", error);
         res.status(500).json({ message: error.message });
     }
 };
-// --- KẾT THÚC THÊM MỚI ---
 
-// Cập nhật module.exports
+
+// --- EXPORT TẤT CẢ ---
 module.exports = {
-    getAllUsers,  
-    createUser,   
-    updateUser,   
-    deleteUser,   
-    getProfile,   
-    updateProfile, 
-    uploadAvatar // <-- ĐÃ THÊM
+    getAllUsers,
+    createUser,
+    updateUser,
+    deleteUser,
+    getProfile,
+    updateProfile,
+    uploadAvatar
 };
