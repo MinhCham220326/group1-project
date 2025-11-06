@@ -1,28 +1,29 @@
 // File: frontend/src/App.js
-
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
-import './App.css';
 
-// --- THÊM 3 DÒNG NÀY ---
 import Signup from './components/Signup';
 import Login from './components/Login';
 import Logout from './components/Logout';
-// --- HẾT PHẦN THÊM ---
+import Profile from './components/Profile'; // <-- 1. IMPORT
+
+import './App.css';
 
 function App() {
   return (
     <Router>
       <div className="App">
-        <nav className="navbar"> 
-          <Link to="/signup">Sign Up</Link>
-          <Link to="/login">Login</Link>
-          <Logout /> {/* Lỗi ở đây */}
+        <nav /* className="navbar" */>
+          <Link to="/signup">Sign Up</Link> | 
+          <Link to="/login">Login</Link> | 
+          <Link to="/profile">Profile</Link> | {/* <-- 2. THÊM LINK */}
+          <Logout />
         </nav>
         <header className="App-header">
           <Routes>
-            <Route path="/signup" element={<Signup />} /> {/* Lỗi ở đây */}
-            <Route path="/login" element={<Login />} /> {/* Lỗi ở đây */}
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/profile" element={<Profile />} /> {/* <-- 3. THÊM ROUTE */}
           </Routes>
         </header>
       </div>

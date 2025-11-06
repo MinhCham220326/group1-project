@@ -28,8 +28,7 @@ app.use(express.json());
 // ... (kết nối MongoDB giữ nguyên) ...
 
 // --- CÁC ROUTES ---
-const userRoutes = require('./routes/user'); // (của Hoạt động 7)
-app.use('/users', userRoutes); 
+
 
 // THÊM ROUTE MỚI CHO AUTH
 const authRoutes = require('./routes/auth');
