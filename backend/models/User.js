@@ -1,50 +1,77 @@
-// File: backend/models/User.js (ĐÃ CHỈNH SỬA)
+// File: backend/models/User.js (ĐÃ GHÉP HOÀN CHỈNH)
+
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs'); // Import bcrypt
+const bcrypt = require('bcryptjs');
+const crypto = require('crypto'); // <-- THÊM TỪ DÒNG 2
 
 const UserSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: true
+    // --- Các trường từ Dòng 1 ---
+    name: {
+        type: String,
+        required: true
+    },
+    email: {
+        type: String,
+        required: true,
+        unique: true
+    },
+    password: {
+        type: String,
+        required: true
+    },
+    role: {
+        type: String,
+        enum: ['user', 'admin'],
+        default: 'user'
+    },
+    
+    // --- Các trường THÊM MỚI từ Dòng 2 ---
+    avatar: {
+        type: String, // Lưu URL từ Cloudinary
+        default: ''
     },
-    email: {
-        type: String,
-        required: true,
-        unique: true // Đảm bảo email không trùng
+    resetPasswordToken: {
+        type: String // Lưu token (đã băm)
     },
-    password: {
-        type: String,
-        required: true // Mật khẩu là bắt buộc
-    },
-    role: {
-        type: String,
-        enum: ['user', 'admin'], // Chỉ cho phép 2 giá trị
-        default: 'user' // Mặc định là 'user'
+    resetPasswordExpire: {
+        type: Date // Thời gian token hết hạn
     }
-    // Bạn có thể thêm các trường khác như avatar, v.v.
-});
+    // --- KẾT THÚC THÊM MỚI ---
+    
+}, { timestamps: true }); // <-- Thêm timestamps từ Dòng 2
 
-// --- Mã hóa mật khẩu TRƯỚC KHI LƯU ---
-// Đây là một "pre-save hook" của Mongoose
+// --- Mã hóa mật khẩu TRƯỚC KHI LƯU (Từ Dòng 1) ---
 UserSchema.pre('save', async function (next) {
-    // Chỉ mã hóa nếu mật khẩu được tạo mới hoặc thay đổi
-    if (!this.isModified('password')) {
-        return next();
-    }
+    if (!this.isModified('password')) {
+        return next();
+    }
 
-    try {
-        // Tạo "salt"
-        const salt = await bcrypt.genSalt(10);
-        // Băm (hash) mật khẩu với salt
-        this.password = await bcrypt.hash(this.password, salt);
-        next();
-    } catch (error) {
-        next(error);
-    }
+    try {
+        const salt = await bcrypt.genSalt(10);
+        this.password = await bcrypt.hash(this.password, salt);
+        next();
+    } catch (error) {
+        next(error);
+    }
 });
 
-// 🛠️ DÒNG CHỈNH SỬA ĐỂ KHẮC PHỤC LỖI OVERWRITEMODELERROR
-// Kiểm tra xem mô hình 'User' đã tồn tại trong mongoose.models chưa.
-// Nếu tồn tại (do nodemon đã load), thì dùng mô hình đó.
-// Nếu chưa, thì tạo mô hình mới.
+// --- THÊM HÀM TẠO TOKEN (Từ Dòng 2) ---
+UserSchema.methods.getResetPasswordToken = function () {
+    // 1. Tạo token thô (raw token)
+    const resetToken = crypto.randomBytes(20).toString('hex');
+
+    // 2. Băm (hash) token này và lưu vào CSDL
+    this.resetPasswordToken = crypto
+        .createHash('sha256')
+        .update(resetToken)
+        .digest('hex');
+
+    // 3. Đặt thời gian hết hạn (10 phút)
+    this.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
+
+    // 4. Trả về token thô (để gửi email)
+    return resetToken;
+};
+
+// 🛠️ GIỮ NGUYÊN DÒNG SỬA LỖI OVERWRITEMODELERROR (Từ Dòng 1)
 module.exports = mongoose.models.User || mongoose.model('User', UserSchema);
