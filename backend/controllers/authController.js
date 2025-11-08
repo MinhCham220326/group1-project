@@ -59,38 +59,44 @@ const logout = (req, res) => {
 
 // --- QUÊN MẬT KHẨU (FORGOT PASSWORD) ---
 const forgotPassword = async (req, res) => {
-    const { email } = req.body;
-    try {
-        const user = await User.findOne({ email });
-        if (!user) {
-            return res.status(200).json({ message: "Email reset đã được gửi (nếu email tồn tại)" });
-        }
+    const { email } = req.body;
+    
+    // 1. Khai báo 'user' ở đây bằng 'let'
+    let user; 
 
-        const resetToken = user.getResetPasswordToken();
-        await user.save({ validateBeforeSave: false });
+    try {
+        // 2. Gán giá trị cho 'user' (không dùng 'const' nữa)
+        user = await User.findOne({ email });
 
-        const resetUrl = `http://localhost:3001/reset-password/${resetToken}`;
-        const message = `Bạn nhận được email này vì bạn (hoặc ai đó) đã yêu cầu reset mật khẩu. 
-        Vui lòng click vào link sau để đặt mật khẩu mới: 
-        \n\n ${resetUrl} \n\n (Link có hạn 10 phút)`;
+        if (!user) {
+            return res.status(200).json({ message: "Email reset đã được gửi (nếu email tồn tại)" });
+        }
 
-        await sendEmail({
-            email: user.email,
-            subject: 'Yêu cầu Reset Mật khẩu',
-            message
-        });
+        const resetToken = user.getResetPasswordToken();
+        await user.save({ validateBeforeSave: false });
 
-        res.status(200).json({ message: "Email reset đã được gửi" });
-    } catch (error) {
-        if (user) {
-            user.resetPasswordToken = undefined;
-            user.resetPasswordExpire = undefined;
-            await user.save({ validateBeforeSave: false });
-        }
-        res.status(500).json({ message: error.message });
-    }
+        const resetUrl = `http://localhost:3001/reset-password/${resetToken}`;
+        const message = `Bạn nhận được email này vì bạn (hoặc ai đó) đã yêu cầu reset mật khẩu. 
+        Vui lòng click vào link sau để đặt mật khẩu mới: 
+        \n\n ${resetUrl} \n\n (Link có hạn 10 phút)`;
+
+        await sendEmail({
+            email: user.email,
+            subject: 'Yêu cầu Reset Mật khẩu',
+            message
+        });
+
+        res.status(200).json({ message: "Email reset đã được gửi" });
+    } catch (error) {
+        // 3. Giờ thì khối 'catch' có thể truy cập 'user' một cách an toàn
+        if (user) { 
+            user.resetPasswordToken = undefined;
+            user.resetPasswordExpire = undefined;
+            await user.save({ validateBeforeSave: false });
+        }
+        res.status(500).json({ message: error.message });
+    }
 };
-
 // --- ĐẶT LẠI MẬT KHẨU (RESET PASSWORD) ---
 const resetPassword = async (req, res) => {
     try {
